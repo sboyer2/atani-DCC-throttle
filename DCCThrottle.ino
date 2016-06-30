@@ -121,15 +121,6 @@ void onSelectPowerOnTrack(MenuItem* p_menu_item) {
 	printf(F("<1>"));
 }
 
-void printf(const __FlashStringHelper *fmt, ...) {
-	char buf[128]; // resulting string limited to 128 chars
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf_P(buf, sizeof(buf), (const char *) fmt, args); // progmem for AVR
-	va_end(args);
-	Serial.print(buf);
-}
-
 void setup() {
 	Menu * rootMenu = new Menu(F("DCC++ Throttle"));
 	menuSystem.set_root_menu(rootMenu);
