@@ -44,4 +44,7 @@
 #define KEYPAD_COL_2_PIN 11
 #define KEYPAD_COL_3_PIN 12
 
+#define ENCODER_PIN_A 2
+#define ENCODER_PIN_B 3
+
 #endif /* CONFIG_H_ */

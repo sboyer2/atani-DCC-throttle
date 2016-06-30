@@ -38,7 +38,7 @@ byte colPins[KEYPAD_COLS] = {KEYPAD_COL_1_PIN, KEYPAD_COL_2_PIN, KEYPAD_COL_3_PI
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_COLS);
 
 // since we are using INTERRUPTS we need to use pin 2/3
-Encoder speedEncoder(2, 3);
+Encoder speedEncoder(ENCODER_PIN_A, ENCODER_PIN_B);
 int directionButtonState = 0;
 int throttleId = -1;
 
