@@ -1,9 +1,9 @@
 
+#include "config.h"
+
 #include <Arduino.h>
 #include <EEPROM.h>
-
-// needed for printf usage
-#include <stdarg.h>
+#include <Encoder.h>
 
 // LCD.h and LiquidCrystal_I2C.h come from: https://bitbucket.org/fmalpartida/new-liquidcrystal
 #include <LCD.h>
@@ -12,56 +12,37 @@
 // Keypad.h comes from: http://playground.arduino.cc/Code/Keypad
 #include "Keypad/src/Keypad.h"
 
-// turn of interrupts since we are not using the encoder on ports 2/3
-#define ENCODER_DO_NOT_USE_INTERRUPTS
-#include <Encoder.h>
-
 // MenuSystem.h comes from: http://blog.humblecoder.com/arduino-menu-system-library/
 // modified to use "const __FlashStringHelper *" instead of "const char *" for menu item names.
 #include "MenuSystem/MenuSystem.h"
 
 #include "Locomotive.h"
 
-// button on rotary encoder
-#define DIRECTION_BUTTON_PIN 13
-
-#define THROTTLE_VERSION "1.0"
-#define MAX_LOCOS 4
+#include "printf.h"
 
 Locomotive locos[MAX_LOCOS];
 int currentLocoIndex = 0;
 Locomotive *currentLoco = &locos[currentLocoIndex];
 
-#define I2C_ADDR    0x3F
-#define BACKLIGHT_PIN 3
-#define En_pin  2
-#define Rw_pin  1
-#define Rs_pin  0
-#define D4_pin  4
-#define D5_pin  5
-#define D6_pin  6
-#define D7_pin  7
-LiquidCrystal_I2C lcd(I2C_ADDR, En_pin, Rw_pin, Rs_pin, D4_pin, D5_pin, D6_pin, D7_pin, BACKLIGHT_PIN, POSITIVE);
+LiquidCrystal_I2C lcd(LCD_I2C_ADDR, LCD_ENABLE_PIN, LCD_RW_PIN, LCD_REGSELECT_PIN,
+		LCD_DATA_4_PIN, LCD_DATA_5_PIN, LCD_DATA_6_PIN, LCD_DATA_7_PIN,
+		LCD_BACKLIGHT_PIN, POSITIVE);
 
-#define KEYPAD_ROWS 4 //four rows
-#define KEYPAD_COLS 3 //three columns
-char keys[KEYPAD_ROWS][KEYPAD_COLS] = {
+const char keys[KEYPAD_ROWS][KEYPAD_COLS] = {
 		{ '1', '2', '3' },
 		{ '4', '5', '6' },
 		{ '7', '8', '9' },
 		{ '*', '0', '#' } };
-byte rowPins[KEYPAD_ROWS] = {4, 5, 6, 7}; //connect to the row pinouts of the keypad
-byte colPins[KEYPAD_COLS] = {10, 11, 12}; //connect to the column pinouts of the keypad
+byte rowPins[KEYPAD_ROWS] = {KEYPAD_ROW_1_PIN, KEYPAD_ROW_2_PIN, KEYPAD_ROW_3_PIN, KEYPAD_ROW_4_PIN};
+byte colPins[KEYPAD_COLS] = {KEYPAD_COL_1_PIN, KEYPAD_COL_2_PIN, KEYPAD_COL_3_PIN};
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_COLS);
 
 // since we are using INTERRUPTS we need to use pin 2/3
 Encoder speedEncoder(2, 3);
 int directionButtonState = 0;
-
 int throttleId = -1;
 
 MenuSystem menuSystem;
-
 bool exitMenu = false;
 
 int inputNumber(const __FlashStringHelper * prompt, int length) {
