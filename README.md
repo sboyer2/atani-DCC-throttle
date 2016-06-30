@@ -1,5 +1,5 @@
 DCCThrottle
------------------
+===========
 DCC++ Handheld Throttle implementation
 
 Required Libraries
@@ -23,3 +23,30 @@ The DCCThrottle project uses Arduino Eclipse (http://eclipse.baeyens.it/index.sh
 Compiling the DCCThrottle project can be done through the Project -> Build Project menu
 option.  After compilation you can upload the resulting binary to the Arduino board via
 Arduino -> Upload Sketch.
+
+Using The Throttle
+==================
+Connect the serial write pin from the pro mini to the DCC++ Base Station serial input and
+provide power to the pro mini.  On first startup the throttle should prompt for a throttle
+id number, if it doesn't you can go into the menu and set the throttle id.
+
+Setting Throttle ID
+-------------------
+Press "*" to enter the menu, scroll through the options to "Throttle Config" and select the
+"Throttle ID" option. The Throttle ID is used as the register number in the messages sent to
+the DCC++ Base Station.  Default range for registers is 1-12.
+
+Using the Menu
+--------------
+Press the "*" key to enter the menu.  Exit the menu by pressing "*" or "#" from any screen.
+The "2" key will scroll UP, "8" will scroll DOWN, "6" will select the current item.
+
+Selecting Locomotive
+--------------------
+Press the "#" key to rotate between the known locomotives, by default up to 4 locomotives
+can be controlled from the throttle.
+
+Toggling Locomotive Functions
+-----------------------------
+Digits 0-9 will toggle those functions, 10-28 can be toggled via the menu under the "Functions"
+section.
