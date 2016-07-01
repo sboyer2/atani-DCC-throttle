@@ -73,7 +73,7 @@ int inputNumber(const String promptLine1, const String promptLine2, int length) 
 			}
 			int digit = key - '0';
 			result = result * 10 + digit;
-			lcd.setCursor(0, 1);
+			lcd.setCursor(promptLine2.length(), 1);
 			lcd.print(result);
 		}
 	} while (!done);
