@@ -6,8 +6,8 @@
 #include <Encoder.h>
 
 // LCD.h and LiquidCrystal_I2C.h come from: https://bitbucket.org/fmalpartida/new-liquidcrystal
-#include <LCD.h>
-#include <LiquidCrystal_I2C.h>
+#include "NewliquidCrystal/LCD.h"
+#include "NewliquidCrystal/LiquidCrystal_I2C.h"
 
 // Keypad.h comes from: http://playground.arduino.cc/Code/Keypad
 #include "Keypad/src/Keypad.h"
