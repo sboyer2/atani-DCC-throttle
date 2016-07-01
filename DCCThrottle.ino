@@ -92,14 +92,14 @@ void showErrorScreen(const String line1, const String line2) {
 }
 
 void onSelectFunctions(MenuItem* p_menu_item) {
-	int functionNumber = inputNumber(F("Enter function #:"), F("(Max ") + String(MAX_FUNCTIONS) + F("):"), 2);
+	int functionNumber = inputNumber(F("Enter function #:"), String(F("(Max ")) + String(MAX_FUNCTIONS) + String(F("):")), 2);
 	if(functionNumber != -1) {
 		if(functionNumber <= MAX_FUNCTIONS) {
 			if(!currentLoco->toggleFunction(functionNumber)) {
-				showErrorScreen(F("Invalid function"), F("Max function:")+String(MAX_FUNCTIONS, DEC));
+				showErrorScreen(F("Invalid function"), String(F("Max function:"))+String(MAX_FUNCTIONS, DEC));
 			}
 		} else {
-			showErrorScreen(F("Invalid function"), F("Max function:")+String(MAX_FUNCTIONS, DEC));
+			showErrorScreen(F("Invalid function"), String(F("Max function:"))+String(MAX_FUNCTIONS, DEC));
 		}
 		exitMenu = true;
 	}
@@ -128,12 +128,12 @@ void onSelectTurnouts(MenuItem* p_menu_item) {
 }
 
 void onSetThrottleId(MenuItem* p_menu_item) {
-	int newThrottleId = inputNumber(F("Enter new ID"), F("(Max ") + String(MAX_THROTTLE_ID) + F("):"), 2);
+	int newThrottleId = inputNumber(F("Enter new ID"), String(F("(Max ")) + String(MAX_THROTTLE_ID) + String(F("):")), 2);
 	if(throttleId != newThrottleId && newThrottleId != -1) {
 		if(newThrottleId <= MAX_THROTTLE_ID) {
 			throttleId = newThrottleId;
 		} else {
-			showErrorScreen(F("ID ") + String(newThrottleId, DEC) + F(" is invalid"), F("Max ID:")+String(MAX_THROTTLE_ID, DEC));
+			showErrorScreen(String(F("ID ")) + String(newThrottleId, DEC) + String(F(" is invalid")), String(F("Max ID:"))+String(MAX_THROTTLE_ID, DEC));
 		}
 		exitMenu = true;
 	}
