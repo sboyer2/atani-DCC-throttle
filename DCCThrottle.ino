@@ -37,7 +37,6 @@ byte rowPins[KEYPAD_ROWS] = {KEYPAD_ROW_1_PIN, KEYPAD_ROW_2_PIN, KEYPAD_ROW_3_PI
 byte colPins[KEYPAD_COLS] = {KEYPAD_COL_1_PIN, KEYPAD_COL_2_PIN, KEYPAD_COL_3_PIN};
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_COLS);
 
-// since we are using INTERRUPTS we need to use pin 2/3
 Encoder speedEncoder(ENCODER_PIN_A, ENCODER_PIN_B);
 int directionButtonState = 0;
 int throttleId = -1;
@@ -45,12 +44,20 @@ int throttleId = -1;
 MenuSystem menuSystem;
 bool exitMenu = false;
 
-int inputNumber(const __FlashStringHelper * prompt, int length) {
+int inputNumber(const String prompt, int length) {
+	return inputNumber(prompt, "", length);
+}
+
+int inputNumber(const String promptLine1, const String promptLine2, int length) {
 	int result = 0;
 	int digitCount = 0;
 	lcd.clear();
 	lcd.home();
-	lcd.print(prompt);
+	lcd.print(promptLine1);
+	lcd.setCursor(0, 1);
+	if(promptLine2.length()) {
+		lcd.print(promptLine2);
+	}
 	bool done = false;
 	do {
 		char key = keypad.getKey();
@@ -73,14 +80,26 @@ int inputNumber(const __FlashStringHelper * prompt, int length) {
 	return result;
 }
 
+void showErrorScreen(const String line1, const String line2) {
+	lcd.clear();
+	lcd.setCursor(0, 0);
+	lcd.print(line1);
+	if(line2.length()) {
+		lcd.setCursor(0, 1);
+		lcd.print(line2);
+	}
+	delay(ERROR_DISPLAY_TIMEOUT);
+}
+
 void onSelectFunctions(MenuItem* p_menu_item) {
-	int functionNumber = inputNumber(F("Enter function #:"), 2);
+	int functionNumber = inputNumber(F("Enter function #:"), F("(Max ") + String(MAX_FUNCTIONS) + F("):"), 2);
 	if(functionNumber != -1) {
-		if(!currentLoco->toggleFunction(functionNumber)) {
-			lcd.clear();
-			lcd.setCursor(0, 0);
-			lcd.print(F("Invalid function"));
-			delay(500);
+		if(functionNumber <= MAX_FUNCTIONS) {
+			if(!currentLoco->toggleFunction(functionNumber)) {
+				showErrorScreen(F("Invalid function"), F("Max function:")+String(MAX_FUNCTIONS, DEC));
+			}
+		} else {
+			showErrorScreen(F("Invalid function"), F("Max function:")+String(MAX_FUNCTIONS, DEC));
 		}
 		exitMenu = true;
 	}
@@ -100,13 +119,22 @@ void onReleaseLoco(MenuItem* p_menu_item) {
 }
 
 void onSelectTurnouts(MenuItem* p_menu_item) {
-
+	int turnoutNumber = inputNumber(F("Turnout # "), 4);
+	if(turnoutNumber != -1) {
+		// TODO: add input to set the expected direction, can we avoid throwing a
+		// switch if it is already aligned correctly?
+		exitMenu = true;
+	}
 }
 
 void onSetThrottleId(MenuItem* p_menu_item) {
-	int newThrottleId = inputNumber(F("Enter new id:"), 2);
+	int newThrottleId = inputNumber(F("Enter new ID"), F("(Max ") + String(MAX_THROTTLE_ID) + F("):"), 2);
 	if(throttleId != newThrottleId && newThrottleId != -1) {
-		throttleId = newThrottleId;
+		if(newThrottleId <= MAX_THROTTLE_ID) {
+			throttleId = newThrottleId;
+		} else {
+			showErrorScreen(F("ID ") + String(newThrottleId, DEC) + F(" is invalid"), F("Max ID:")+String(MAX_THROTTLE_ID, DEC));
+		}
 		exitMenu = true;
 	}
 }
@@ -145,14 +173,11 @@ void setup() {
 	lcd.print(F(" v"));
 	lcd.print(F(THROTTLE_VERSION));
 
-#ifdef _THROTTLE_DEBUG
-	printf(F("DCC++ Throttle\n%s  version %s\n"), __DATE__, THROTTLE_VERSION);
-#endif
 	delay(250);
-	throttleId = EEPROM.read(0);
-	if ( throttleId <= 0 || throttleId > 10) {
+	throttleId = EEPROM.read(EEPROM_INDEX_THROTTLE_ID);
+	if (throttleId <= 0 || throttleId > MAX_THROTTLE_ID) {
 		onSetThrottleId(NULL);
-		EEPROM.write(0, throttleId);
+		EEPROM.write(EEPROM_INDEX_THROTTLE_ID, throttleId);
 	}
 	lcd.clear();
 	updateLCD();

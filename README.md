@@ -17,7 +17,7 @@ The following libraries are required for this to compile:
   by default in Arduino Eclipse.
 
 ## Build Environment
-The DCCThrottle project uses Arduino Eclipse (http://eclipse.baeyens.it/index.shtml). 
+The DCCThrottle project uses Arduino Eclipse (http://eclipse.baeyens.it/index.shtml).
 
 Compiling the DCCThrottle project can be done through the Project -> Build Project menu
 option.  After compilation you can upload the resulting binary to the Arduino board via
@@ -53,8 +53,10 @@ The __2__ key will scroll UP, __8__ will scroll DOWN, __6__ will select the curr
 
 ## Selecting Locomotive
 Press the __#__ key to rotate between the known locomotives, by default up to 4 locomotives
-can be controlled from the throttle.
+can be controlled from the throttle.  This can be changed in config.h in the __MAX_LOCOS__
+define.
 
 ## Toggling Locomotive Functions
-Digits __0__-__9__ will toggle those functions, __10__-__28__ can be toggled via the menu under the "Functions"
+Digits __0__-__9__ on the keypad will toggle those functions when not in a menu, functions
+__10__-__28__ can be toggled via the menu under the "Functions"
 section.

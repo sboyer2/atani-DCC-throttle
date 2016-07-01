@@ -23,6 +23,7 @@ void Locomotive::setAddress(short address) {
 	short oldAddress = _address;
 	_address = address;
 	if(address != 0) {
+		// TODO: send aquire loco command to base station.
 		_function0to4 = B00000000;
 		_function5to8 = B00000000;
 		_function9to12 = B00000000;
