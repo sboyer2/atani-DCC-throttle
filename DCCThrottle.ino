@@ -33,24 +33,25 @@ const char keys[KEYPAD_ROWS][KEYPAD_COLS] = {
 		{ '4', '5', '6' },
 		{ '7', '8', '9' },
 		{ '*', '0', '#' } };
-byte rowPins[KEYPAD_ROWS] = {KEYPAD_ROW_1_PIN, KEYPAD_ROW_2_PIN, KEYPAD_ROW_3_PIN, KEYPAD_ROW_4_PIN};
-byte colPins[KEYPAD_COLS] = {KEYPAD_COL_1_PIN, KEYPAD_COL_2_PIN, KEYPAD_COL_3_PIN};
+uint8_t rowPins[KEYPAD_ROWS] = {KEYPAD_ROW_1_PIN, KEYPAD_ROW_2_PIN, KEYPAD_ROW_3_PIN, KEYPAD_ROW_4_PIN};
+uint8_t colPins[KEYPAD_COLS] = {KEYPAD_COL_1_PIN, KEYPAD_COL_2_PIN, KEYPAD_COL_3_PIN};
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_COLS);
 
 Encoder speedEncoder(ENCODER_PIN_A, ENCODER_PIN_B);
-int directionButtonState = 0;
-int throttleId = -1;
+int lastDirectionButtonState = HIGH;
+uint8_t throttleId = -1;
 
 MenuSystem menuSystem;
 bool exitMenu = false;
+
+long lastSpeedEncoderUpdate = 0L;
 
 int inputNumber(const String prompt, int length) {
 	return inputNumber(prompt, "", length);
 }
 
-int inputNumber(const String promptLine1, const String promptLine2, int length) {
-	int result = 0;
-	int digitCount = 0;
+uint16_t inputNumber(const String promptLine1, const String promptLine2, int length) {
+	uint16_t result = 0;
 	lcd.clear();
 	lcd.home();
 	lcd.print(promptLine1);
@@ -62,13 +63,12 @@ int inputNumber(const String promptLine1, const String promptLine2, int length) 
 	do {
 		char key = keypad.getKey();
 		if (key == '*') {
-			result = -1;
+			result = 0xFFFF;
 			done = true;
 		} else if (key == '#') {
 			done = true;
 		} else if (key != NO_KEY) {
-			digitCount++;
-			if (digitCount > length) {
+			if (--length <= 0) {
 				done = true;
 			}
 			int digit = key - '0';
@@ -92,8 +92,8 @@ void showErrorScreen(const String line1, const String line2) {
 }
 
 void onSelectFunctions(MenuItem* p_menu_item) {
-	int functionNumber = inputNumber(F("Enter function #:"), String(F("(Max ")) + String(MAX_FUNCTIONS) + String(F("):")), 2);
-	if(functionNumber != -1) {
+	uint16_t functionNumber = inputNumber(F("Enter function #:"), String(F("(Max ")) + String(MAX_FUNCTIONS) + String(F("):")), 2);
+	if(functionNumber != 0xFFFF) {
 		if(functionNumber <= MAX_FUNCTIONS) {
 			if(!currentLoco->toggleFunction(functionNumber)) {
 				showErrorScreen(F("Invalid function"), String(F("Max function:"))+String(MAX_FUNCTIONS, DEC));
@@ -106,8 +106,8 @@ void onSelectFunctions(MenuItem* p_menu_item) {
 }
 
 void onSelectLoco(MenuItem* p_menu_item) {
-	int newLocoAddress = inputNumber(F("Acquire Loco # "), 4);
-	if(currentLoco->getAddress() != newLocoAddress && newLocoAddress != -1) {
+	uint16_t newLocoAddress = inputNumber(F("Acquire Loco # "), 5);
+	if(currentLoco->getAddress() != newLocoAddress && newLocoAddress != 0xFFFF) {
 		currentLoco->setAddress(newLocoAddress);
 		exitMenu = true;
 	}
@@ -119,8 +119,8 @@ void onReleaseLoco(MenuItem* p_menu_item) {
 }
 
 void onSelectTurnouts(MenuItem* p_menu_item) {
-	int turnoutNumber = inputNumber(F("Turnout # "), 4);
-	if(turnoutNumber != -1) {
+	uint16_t turnoutNumber = inputNumber(F("Turnout # "), 4);
+	if(turnoutNumber != 0xFFFF) {
 		// TODO: add input to set the expected direction, can we avoid throwing a
 		// switch if it is already aligned correctly?
 		exitMenu = true;
@@ -128,8 +128,8 @@ void onSelectTurnouts(MenuItem* p_menu_item) {
 }
 
 void onSetThrottleId(MenuItem* p_menu_item) {
-	int newThrottleId = inputNumber(F("Enter new ID"), String(F("(Max ")) + String(MAX_THROTTLE_ID) + String(F("):")), 2);
-	if(throttleId != newThrottleId && newThrottleId != -1) {
+	uint16_t newThrottleId = inputNumber(F("Enter new ID"), String(F("(Max ")) + String(MAX_THROTTLE_ID) + String(F("):")), 2);
+	if(throttleId != newThrottleId && newThrottleId != 0xFFFF) {
 		if(newThrottleId <= MAX_THROTTLE_ID) {
 			throttleId = newThrottleId;
 		} else {
@@ -226,22 +226,44 @@ void processMenu() {
 }
 
 void loop() {
-	int speedEncoderValue = constrain(speedEncoder.read(), 0, 126);
-	if (speedEncoderValue != currentLoco->getSpeed()) {
-		currentLoco->setSpeed(speedEncoderValue);
+	long currentmillis = millis();
+	int8_t speedEncoderReading = speedEncoder.read();
+	// check if the user has spun the rotary encoder very fast in either
+	// direction and if so force it to be within the limits
+	if(speedEncoderReading <= ENCODER_MINIMUM_LIMIT) {
+		speedEncoderReading = ENCODER_MINIMUM_LIMIT;
+		speedEncoder.write(speedEncoderReading);
+	} else if(speedEncoderReading >= ENCODER_MAXIMUM_LIMIT) {
+		speedEncoderReading = ENCODER_MAXIMUM_LIMIT;
+		speedEncoder.write(speedEncoderReading);
+	}
+	// read the speed again and constrain it to the configured limits
+	speedEncoderReading = constrain(speedEncoderReading, ENCODER_MINIMUM_LIMIT, ENCODER_MAXIMUM_LIMIT);
+	// divide the speedEncoderReading to bring it down into range.
+	speedEncoderReading /= ENCODER_MAXIMUM_LIMIT_DIVIDER;
+	// check if the reading is different than our last recorded speed
+	// and that it has been long enough since we updated it last.
+	if (speedEncoderReading != currentLoco->getSpeed() &&
+			(currentmillis > (lastSpeedEncoderUpdate + ENCODER_REPORTING_DELAY))) {
+		lastSpeedEncoderUpdate = currentmillis;
+		if(speedEncoderReading > 126) {
+			speedEncoderReading = 126;
+		}
+		currentLoco->setSpeed(speedEncoderReading);
 		updateLCD();
 	}
-	directionButtonState = digitalRead(DIRECTION_BUTTON_PIN);
-	if (directionButtonState == LOW) {
-		delay(50);
-		directionButtonState = digitalRead(DIRECTION_BUTTON_PIN); // check a 2nd time to be sure
-		if (directionButtonState == LOW) { // check a 2nd time to be sure
-			currentLoco->setDirection(!currentLoco->getDirection());
-			updateLCD();
-			do { // routine to stay here till button released & not toggle direction
-				directionButtonState = digitalRead(DIRECTION_BUTTON_PIN);
-			} while (directionButtonState == LOW);
-		}
+	// check the direction button on the encoder
+	int directionButtonState = digitalRead(DIRECTION_BUTTON_PIN);
+	// if the direction button is not what we saw last time and
+	// it has been longer than configured delay send it on to the
+	// locomotive
+	if(directionButtonState && !lastDirectionButtonState) {
+		currentLoco->toggleDirection();
+		updateLCD();
+		// reset to default since we just toggled dirction
+		lastDirectionButtonState = HIGH;
+	} else {
+		lastDirectionButtonState = directionButtonState;
 	}
 	char key = keypad.getKey();
 	if (key == '*') {

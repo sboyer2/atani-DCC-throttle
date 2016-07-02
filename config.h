@@ -52,10 +52,10 @@
 #define KEYPAD_COLS 3
 
 // defines which pins the keypad rows are connected to
-#define KEYPAD_ROW_1_PIN 4
-#define KEYPAD_ROW_2_PIN 5
-#define KEYPAD_ROW_3_PIN 6
-#define KEYPAD_ROW_4_PIN 7
+#define KEYPAD_ROW_1_PIN 6
+#define KEYPAD_ROW_2_PIN 7
+#define KEYPAD_ROW_3_PIN 8
+#define KEYPAD_ROW_4_PIN 9
 
 // defines which pins the keypad columns are connected to
 #define KEYPAD_COL_1_PIN 10
@@ -63,10 +63,26 @@
 #define KEYPAD_COL_3_PIN 12
 
 // defines the button on rotary encoder is connected to
-#define DIRECTION_BUTTON_PIN 13
+#define DIRECTION_BUTTON_PIN 5
 
 // defines the pins that the rotary encoder is connected to
-#define ENCODER_PIN_A 2
-#define ENCODER_PIN_B 3
+#define ENCODER_PIN_A 3
+#define ENCODER_PIN_B 4
+
+// minimum number of milliseconds that must pass before reporting
+// a new speed value to the base station
+#define ENCODER_REPORTING_DELAY 100
+
+// defines the minimum limit for the rotary encoder to allow
+#define ENCODER_MINIMUM_LIMIT 0
+
+// defines the maximum limit for the rotary encoder to allow
+#define ENCODER_MAXIMUM_LIMIT 126
+
+// defines a divider for the maximum limit, this should be set to
+// ENCODER_MAXIMUM_LIMIT/126 (ie: 100ppm encoder that provides 4
+// detents per rotation should use 504 for ENCODER_MAXIMUM_LIMIT
+// and set this value to 4
+#define ENCODER_MAXIMUM_LIMIT_DIVIDER 1
 
 #endif /* CONFIG_H_ */

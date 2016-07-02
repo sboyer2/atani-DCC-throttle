@@ -13,28 +13,43 @@ public:
 	Locomotive();
 	virtual ~Locomotive();
 
-	void setAddress(short address);
-	short getAddress() {
+	void setAddress(uint16_t address);
+	uint16_t getAddress() {
 		return _address;
 	}
 
-	void setSpeed(byte speed) {
-		_speed = speed;
+	void setSpeed(uint8_t speed) {
+		if(speed > 126) {
+			_speed = 126;
+		} else if (speed < 0) {
+			_speed = 0;
+		} else {
+			_speed = speed;
+		}
 		sendLocoCommand();
 	}
-	byte getSpeed() {
+
+	uint8_t getSpeed() {
 		return _speed;
 	}
-	void setDirection(byte direction) {
+
+	void toggleDirection() {
+		_direction = !_direction;
+	}
+
+	void setDirection(uint8_t direction) {
 		_direction = direction;
 	}
-	byte getDirection() {
+
+	uint8_t getDirection() {
 		return _direction;
 	}
-	byte getFunctions0To4() {
+
+	uint8_t getFunctions0To4() {
 		return _function0to4;
 	}
-	byte getFunctinos5To8() {
+
+	uint8_t getFunctinos5To8() {
 		return _function5to8;
 	}
 
@@ -50,14 +65,14 @@ private:
 	void sendLocoCommand();
 	void sendLocoFunctionCommand(LOCO_FUNCTION_SET set);
 
-	short _address;
-	byte _direction;
-	byte _speed;
-	byte _function0to4;
-	byte _function5to8;
-	byte _function9to12;
-	byte _function13to20;
-	byte _function21to28;
+	uint16_t _address;
+	uint8_t _direction;
+	uint8_t _speed;
+	uint8_t _function0to4;
+	uint8_t _function5to8;
+	uint8_t _function9to12;
+	uint8_t _function13to20;
+	uint8_t _function21to28;
 };
 
 #endif /* LOCOMOTIVE_H_ */

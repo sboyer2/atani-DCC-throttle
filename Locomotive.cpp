@@ -19,8 +19,8 @@ Locomotive::~Locomotive() {
 	// TODO Auto-generated destructor stub
 }
 
-void Locomotive::setAddress(short address) {
-	short oldAddress = _address;
+void Locomotive::setAddress(uint16_t address) {
+	uint16_t oldAddress = _address;
 	_address = address;
 	if(address != 0) {
 		// TODO: send aquire loco command to base station.
